@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+
+  db:
+    image: postgres
+    volumes:
+        - ./docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_MULTIPLE_DATABASES="sber_test","sber_test_test"
+    ports:
+      - '5432:5432'
+
+  web:
+    build: .
+    command: ./wait-for-it.sh -h db -p 5432 -t 5 -- bash -c "alembic upgrade head && python main.py"
+    volumes:
+      - .:/app
+    ports:
+      - '8000:8000'
+    links:
+      - db
+    depends_on:
+      - db
